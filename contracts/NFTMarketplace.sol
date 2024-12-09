@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
-//INTERNAL IMPORT FOR NFT OPENZIPLINE
-import "@openzeppelin/contracts/utils/Counters.sol"; // using as a counter whit keep track of id and counter
+// INTERNAL IMPORT FOR NFT OPENZIPLINE
+import "@openzeppelin/contracts/utils/Counters.sol"; // using as a counter with keep track of id and counter
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol"; // Using ERC721 standard
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
@@ -13,6 +13,7 @@ contract NFTMarketplace is ERC721URIStorage {
     Counters.Counter private _tokenIds;
     Counters.Counter private _itemsSold;
 
+    uint256 public unlockTime;
     uint256 listingPrice = 0.025 ether;
     address payable owner;
 
@@ -34,8 +35,28 @@ contract NFTMarketplace is ERC721URIStorage {
         bool sold
     );
 
-    constructor() ERC721("Metaverse Tokens", "METT") {
+    // Modify constructor to include unlockTime
+    constructor(uint256 _unlockTime) ERC721("Metaverse Tokens", "METT") {
+        require(_unlockTime > block.timestamp, "Unlock time should be in the future");
+
+        unlockTime = _unlockTime; // Set the unlockTime
         owner = payable(msg.sender);
+    }
+
+    event Withdrawal(uint256 amount, uint256 when);
+
+    function withdraw() public {
+        require(msg.sender == owner, "You aren't the owner");
+        require(block.timestamp >= unlockTime, "You can't withdraw yet");
+
+
+        uint256 amount = address(this).balance;
+        require(amount > 0, "No funds to withdraw");
+        emit Withdrawal(amount, block.timestamp);
+
+        // Emit the Withdrawal event
+
+        payable(owner).transfer(amount);
     }
 
     /* Updates the listing price of the contract */
@@ -168,6 +189,10 @@ contract NFTMarketplace is ERC721URIStorage {
             }
         }
         return items;
+    }
+
+    function getOwner() public view returns (address) {
+        return owner;
     }
 
     /* Returns only items a user has listed */

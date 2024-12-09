@@ -8,7 +8,7 @@ const Button = ({ btnName, handleClick, icon, classStyle }) => {
     <div className={Style.box}>
       <button
         className={`${Style.button} ${classStyle}`}
-        onClick={() => handleClick()}
+        onClick={handleClick}
       >
         {icon} {btnName}
       </button>
